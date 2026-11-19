@@ -1,6 +1,6 @@
 # notify-turn
 
-Host plugin. Pops a Windows toast when a top-level session's turn finishes.
+Host plugin. Pops a system notification when a top-level session's turn finishes.
 
 - Mounted inside the `dafeiyu` preset's plugin list, so it applies to new sessions.
 - `agent/status` is agent-scoped: each instance only hears its own agent.
@@ -13,5 +13,6 @@ Host plugin. Pops a Windows toast when a top-level session's turn finishes.
 - The system sound scheme is `.None` on this machine, so the toast's own audio is
   silent. The script disables it (`<audio silent="true"/>`) and plays
   `C:\Windows\Media\notify.wav` with `System.Media.SoundPlayer` instead.
+- On macOS it runs `osascript -e 'display notification ... with title ... sound name "Ping"'`.
 
 Source: [`notify-turn`](notify-turn/).

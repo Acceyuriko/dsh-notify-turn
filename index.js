@@ -1,4 +1,4 @@
-// 任务跑完弹一条 Windows 通知。
+// 任务跑完弹一条系统通知。Windows 用 toast，macOS 用 osascript。
 // 挂在预设里，所以每个 agent 一个实例；agent/status 是 agent 作用域事件，
 // 一个实例只收到自己这个 agent 的状态，不会串。
 // 只对顶层会话（不是子代理）发，且跑够 minSeconds 才发，避免每句短回复都弹。
@@ -12,13 +12,25 @@ export const name = 'notify-turn'
 const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'toast.ps1')
 const powershell = `${process.env.SystemRoot ?? 'C:\\Windows'}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`
 
-function show(title, body) {
-  const child = spawn(powershell, [
-    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
-    '-File', script, '-Title', title, '-Body', body,
-  ], { detached: true, stdio: 'ignore', windowsHide: true })
+function run(command, args) {
+  const child = spawn(command, args, { detached: true, stdio: 'ignore', windowsHide: true })
   child.on('error', () => {})
   child.unref()
+}
+
+function appleString(value) {
+  return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r?\n/g, '\\n')}"`
+}
+
+function show(title, body) {
+  if (process.platform === 'darwin') {
+    run('osascript', ['-e', `display notification ${appleString(body)} with title ${appleString(title)} sound name "Ping"`])
+    return
+  }
+  run(powershell, [
+    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+    '-File', script, '-Title', title, '-Body', body,
+  ])
 }
 
 function taskLabel(agent) {
